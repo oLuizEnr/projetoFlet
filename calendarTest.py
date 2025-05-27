@@ -1,33 +1,29 @@
+import datetime
 import flet as ft
-from datetime import date
-
-# dados de exemplo
-anotacoes = {
-    "2025-05-25": "Aniversário",
-    "2025-05-26": "Reunião importante",
-}
 
 def main(page: ft.Page):
-    page.title = "Exemplo de Calendário em Flet"
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
-    # Label para mostrar info da data
-    info = ft.Text("Selecione uma data", size=16)
+    def handle_change(e):
+        page.add(ft.Text(f"Date changed: {e.control.value.strftime('%m/%d/%Y')}"))
 
-    # DatePicker nativo
-    dp = ft.DatePicker(
-        value=date.today(),
-        on_change=lambda e: on_date_change(e, info),
+    def handle_dismissal(e):
+        page.add(ft.Text(f"DatePicker dismissed"))
+
+    page.add(
+        ft.ElevatedButton(
+            "Pick date",
+            icon=ft.Icons.CALENDAR_MONTH,
+            on_click=lambda e: page.open(
+                ft.DatePicker(
+                    first_date=datetime.datetime(year=2000, month=10, day=1),
+                    last_date=datetime.datetime(year=2025, month=10, day=1),
+                    on_change=handle_change,
+                    on_dismiss=handle_dismissal,
+                )
+            ),
+        )
     )
 
-    page.add(dp, info)
 
-
-def on_date_change(e, info: ft.Text):
-    # formata para dd/mm/YYYY
-    d = e.control.value.strftime("%d/%m/%Y")
-    info.value = f"{d} — {anotacoes.get(d, 'Nenhuma anotação')}"
-    e.control.page.update()
-
-
-if __name__ == "__main__":
-    ft.app(target=main)
+ft.app(main)
