@@ -104,109 +104,120 @@ def main(page: ft.Page):
             ]
         )
 
+    def handle_change(e):
+        page.add(ft.Text(f"Date changed: {e.control.value.strftime('%m/%d/%Y')}"))
+
+    def handle_dismissal(e):
+        page.add(ft.Text(f"DatePicker dismissed"))
+
     def criar_calendario(role):
-        date_picker = ft.DatePicker()
-        eventos_container = ft.Column()
+        date_picker = ft.DatePicker(
+            first_date=datetime.datetime(year=2000, month=10, day=1),
+            last_date=datetime.datetime(year=2025, month=10, day=1),
+            on_change=handle_change,
+            on_dismiss=handle_dismissal,
+        )
+    #     eventos_container = ft.Column()
         
-        def carregar_eventos(e):
-            eventos_container.controls.clear()
-            if date_picker.value:
-                data = date_picker.value.strftime("%Y-%m-%d")
-                conn = sqlite3.connect(DB_PATH)
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT titulo, descricao, cor 
-                    FROM eventos 
-                    WHERE data = ? AND id_usuario = ?
-                ''', (data, page.session.get("user_id")))
+    #     def carregar_eventos(e):
+    #         eventos_container.controls.clear()
+    #         if date_picker.value:
+    #             data = date_picker.value.strftime("%Y-%m-%d")
+    #             conn = sqlite3.connect(DB_PATH)
+    #             cursor = conn.cursor()
+    #             cursor.execute('''
+    #                 SELECT titulo, descricao, cor 
+    #                 FROM eventos 
+    #                 WHERE data = ? AND id_usuario = ?
+    #             ''', (data, page.session.get("user_id")))
                 
-                for titulo, descricao, cor in cursor.fetchall():
-                    eventos_container.controls.append(
-                        ft.Card(
-                            ft.Container(
-                                ft.Column([
-                                    ft.Text(titulo, weight="bold"),
-                                    ft.Text(descricao),
-                                ]),
-                                bgcolor=cor or ft.Colors.BLUE_GREY_100,
-                                padding=10,
-                                border_radius=5
-                            ),
-                            margin=5
-                        )
-                    )
-                conn.close()
+    #             for titulo, descricao, cor in cursor.fetchall():
+    #                 eventos_container.controls.append(
+    #                     ft.Card(
+    #                         ft.Container(
+    #                             ft.Column([
+    #                                 ft.Text(titulo, weight="bold"),
+    #                                 ft.Text(descricao),
+    #                             ]),
+    #                             bgcolor=cor or ft.Colors.BLUE_GREY_100,
+    #                             padding=10,
+    #                             border_radius=5
+    #                         ),
+    #                         margin=5
+    #                     )
+    #                 )
+    #             conn.close()
                 
-                if not eventos_container.controls:
-                    eventos_container.controls.append(
-                        ft.Text("Nenhum evento para esta data", italic=True)
-                    )
-                page.update()
+    #             if not eventos_container.controls:
+    #                 eventos_container.controls.append(
+    #                     ft.Text("Nenhum evento para esta data", italic=True)
+    #                 )
+    #             page.update()
 
-        date_picker.on_change = carregar_eventos
-        page.overlay.append(date_picker)
+    #     date_picker.on_change = carregar_eventos
+    #     page.overlay.append(date_picker)
 
-        return ft.Column([
-            ft.ElevatedButton(
-                "Selecionar Data",
-                icon=ft.Icons.CALENDAR_MONTH,
-                on_click=lambda _: date_picker.pick_date()
-            ),
-            ft.Text("Eventos:", weight="bold"),
-            eventos_container,
-            ft.ElevatedButton(
-                "Novo Evento",
-                on_click=lambda _: abrir_dialogo_evento(date_picker)
-            )
-        ])
+    #     return ft.Column([
+    #         ft.ElevatedButton(
+    #             "Selecionar Data",
+    #             icon=ft.Icons.CALENDAR_MONTH,
+    #             on_click=lambda _: date_picker.pick_date()
+    #         ),
+    #         ft.Text("Eventos:", weight="bold"),
+    #         eventos_container,
+    #         ft.ElevatedButton(
+    #             "Novo Evento",
+    #             on_click=lambda _: abrir_dialogo_evento(date_picker)
+    #         )
+    #     ])
 
-    def abrir_dialogo_evento(date_picker):
-        if not date_picker.value:
-            page.snack_bar = ft.SnackBar(ft.Text("Selecione uma data primeiro!"))
-            page.snack_bar.open = True
-            page.update()
-            return
+    # def abrir_dialogo_evento(date_picker):
+    #     if not date_picker.value:
+    #         page.snack_bar = ft.SnackBar(ft.Text("Selecione uma data primeiro!"))
+    #         page.snack_bar.open = True
+    #         page.update()
+    #         return
 
-        titulo = ft.TextField(label="Título")
-        descricao = ft.TextField(label="Descrição", multiline=True)
-        cor = ft.Dropdown(
-            label="Cor",
-            options=[
-                ft.dropdown.Option(ft.Colors.GREEN_100, "Verde"),
-                ft.dropdown.Option(ft.Colors.BLUE_100, "Azul"),
-                ft.dropdown.Option(ft.Colors.RED_100, "Vermelho"),
-            ]
-        )
+    #     titulo = ft.TextField(label="Título")
+    #     descricao = ft.TextField(label="Descrição", multiline=True)
+    #     cor = ft.Dropdown(
+    #         label="Cor",
+    #         options=[
+    #             ft.dropdown.Option(ft.Colors.GREEN_100, "Verde"),
+    #             ft.dropdown.Option(ft.Colors.BLUE_100, "Azul"),
+    #             ft.dropdown.Option(ft.Colors.RED_100, "Vermelho"),
+    #         ]
+    #     )
 
-        def salvar_evento(e):
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO eventos (data, titulo, descricao, cor, id_usuario)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (
-                date_picker.value.strftime("%Y-%m-%d"),
-                titulo.value,
-                descricao.value,
-                cor.value,
-                page.session.get("user_id")
-            ))
-            conn.commit()
-            conn.close()
+    #     def salvar_evento(e):
+    #         conn = sqlite3.connect(DB_PATH)
+    #         cursor = conn.cursor()
+    #         cursor.execute('''
+    #             INSERT INTO eventos (data, titulo, descricao, cor, id_usuario)
+    #             VALUES (?, ?, ?, ?, ?)
+    #         ''', (
+    #             date_picker.value.strftime("%Y-%m-%d"),
+    #             titulo.value,
+    #             descricao.value,
+    #             cor.value,
+    #             page.session.get("user_id")
+    #         ))
+    #         conn.commit()
+    #         conn.close()
             
-            dialog.open = False
-            page.snack_bar = ft.SnackBar(ft.Text("Evento salvo com sucesso!"))
-            page.snack_bar.open = True
-            page.update()
+    #         dialog.open = False
+    #         page.snack_bar = ft.SnackBar(ft.Text("Evento salvo com sucesso!"))
+    #         page.snack_bar.open = True
+    #         page.update()
 
-        dialog = ft.AlertDialog(
-            title=ft.Text(f"Novo Evento - {date_picker.value.strftime('%d/%m/%Y')}"),
-            content=ft.Column([titulo, descricao, cor]),
-            actions=[ft.ElevatedButton("Salvar", on_click=salvar_evento)]
-        )
-        page.dialog = dialog
-        dialog.open = True
-        page.update()
+    #     dialog = ft.AlertDialog(
+    #         title=ft.Text(f"Novo Evento - {date_picker.value.strftime('%d/%m/%Y')}"),
+    #         content=ft.Column([titulo, descricao, cor]),
+    #         actions=[ft.ElevatedButton("Salvar", on_click=salvar_evento)]
+    #     )
+    #     page.dialog = dialog
+    #     dialog.open = True
+    #     page.update()
 
     def criar_conteudo(titulo, role, extra_controls=None):
         return ft.View(
@@ -235,19 +246,34 @@ def main(page: ft.Page):
                 )
             )
         elif role:
-            if "/calendar" in page.route:
+            if "/home" in page.route:
+                now = datetime.now()
                 page.views.append(
                     criar_conteudo(
-                        titulo=f"Calendário {role.capitalize()}",
+                        titulo=f"Home {role.capitalize()}",
                         role=role,
-                        extra_controls=[criar_calendario(role)]
+                        extra_controls=[
+                            ft.Text(f"{now.strftime("%B %d, %Y")}"),
+                            ft.Image(src="")
+                        ],
+                    )
+                )
+            elif "/calendar" in page.route:
+                page.views.append(
+                    criar_conteudo(
+                        titulo=f"Calendar {role.capitalize()}",
+                        role=role,
+                        extra_controls=[]
                     )
                 )
             else:
                 page.views.append(
                     criar_conteudo(
-                        titulo=f"Home {role.capitalize()}",
-                        role=role
+                        titulo=f"Messages {role.capitalize()}",
+                        role=role,
+                        extra_controls=[
+
+                        ]
                     )
                 )
         page.update()
