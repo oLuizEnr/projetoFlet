@@ -6,11 +6,9 @@ from datetime import datetime
 
 # Configuração de caminhos
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'projeto_agua', 'src', 'database.db')
-ASSETS_DIR = os.path.join(BASE_DIR, 'projeto_agua', 'src', 'assets')
+DB_PATH = os.path.join(BASE_DIR, 'database.db')
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
 
-# Criar diretórios se não existirem
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 os.makedirs(ASSETS_DIR, exist_ok=True)
 
 def criar_tabela_usuarios():
@@ -44,6 +42,21 @@ def criar_tabela_eventos():
     ''')
     conn.commit()
     conn.close()
+
+def criar_tabela_mensagens():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS mensagens (
+            id_mensagem INTEGER PRIMARY KEY AUTOINCREMENT,
+            data DATE NOT NULL,
+            conteudo TEXT NOT NULL,
+            id_remetente INTEGER NOT NULL,
+            id_destinatario INTEGER NOT NULL,
+            FOREIGN KEY(id_remetente) REFERENCES usuarios(id_usuario),
+            FOREIGN KEY(id_destinatario) REFERENCES usuarios(id_usuario)
+        )
+    ''')
 
 def criar_admin_padrao():
     conn = sqlite3.connect(DB_PATH)
@@ -81,10 +94,22 @@ def main(page: ft.Page):
     page.title = "Sistema de Autenticação"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    def criar_nav_bar(role):
+    def criar_header():
         return ft.AppBar(
-            title=ft.Text("Projeto Água"),
+            leading=ft.Image(src="icon.png"),
+            title=ft.Text("projeto_agua"),
+            center_title=True,
             actions=[
+                ft.IconButton(
+                    icon=ft.Icons.LOGOUT,
+                    on_click=lambda _: page.go("/login")
+                )
+            ]
+        )
+
+    def criar_nav_bar(role):
+        return ft.Column(
+            controls=[
                 ft.IconButton(
                     icon=ft.Icons.HOME,
                     on_click=lambda _: page.go(f"/{role}/home")
@@ -97,131 +122,13 @@ def main(page: ft.Page):
                     icon=ft.Icons.MESSAGE,
                     on_click=lambda _: page.go(f"/{role}/messages")
                 ),
-                ft.IconButton(
-                    icon=ft.Icons.LOGOUT,
-                    on_click=lambda _: page.go("/login")
-                ),
             ]
         )
-
-    def handle_change(e):
-        page.add(ft.Text(f"Date changed: {e.control.value.strftime('%m/%d/%Y')}"))
-
-    def handle_dismissal(e):
-        page.add(ft.Text(f"DatePicker dismissed"))
-
-    def criar_calendario(role):
-        date_picker = ft.DatePicker(
-            first_date=datetime.datetime(year=2000, month=10, day=1),
-            last_date=datetime.datetime(year=2025, month=10, day=1),
-            on_change=handle_change,
-            on_dismiss=handle_dismissal,
-        )
-    #     eventos_container = ft.Column()
-        
-    #     def carregar_eventos(e):
-    #         eventos_container.controls.clear()
-    #         if date_picker.value:
-    #             data = date_picker.value.strftime("%Y-%m-%d")
-    #             conn = sqlite3.connect(DB_PATH)
-    #             cursor = conn.cursor()
-    #             cursor.execute('''
-    #                 SELECT titulo, descricao, cor 
-    #                 FROM eventos 
-    #                 WHERE data = ? AND id_usuario = ?
-    #             ''', (data, page.session.get("user_id")))
-                
-    #             for titulo, descricao, cor in cursor.fetchall():
-    #                 eventos_container.controls.append(
-    #                     ft.Card(
-    #                         ft.Container(
-    #                             ft.Column([
-    #                                 ft.Text(titulo, weight="bold"),
-    #                                 ft.Text(descricao),
-    #                             ]),
-    #                             bgcolor=cor or ft.Colors.BLUE_GREY_100,
-    #                             padding=10,
-    #                             border_radius=5
-    #                         ),
-    #                         margin=5
-    #                     )
-    #                 )
-    #             conn.close()
-                
-    #             if not eventos_container.controls:
-    #                 eventos_container.controls.append(
-    #                     ft.Text("Nenhum evento para esta data", italic=True)
-    #                 )
-    #             page.update()
-
-    #     date_picker.on_change = carregar_eventos
-    #     page.overlay.append(date_picker)
-
-    #     return ft.Column([
-    #         ft.ElevatedButton(
-    #             "Selecionar Data",
-    #             icon=ft.Icons.CALENDAR_MONTH,
-    #             on_click=lambda _: date_picker.pick_date()
-    #         ),
-    #         ft.Text("Eventos:", weight="bold"),
-    #         eventos_container,
-    #         ft.ElevatedButton(
-    #             "Novo Evento",
-    #             on_click=lambda _: abrir_dialogo_evento(date_picker)
-    #         )
-    #     ])
-
-    # def abrir_dialogo_evento(date_picker):
-    #     if not date_picker.value:
-    #         page.snack_bar = ft.SnackBar(ft.Text("Selecione uma data primeiro!"))
-    #         page.snack_bar.open = True
-    #         page.update()
-    #         return
-
-    #     titulo = ft.TextField(label="Título")
-    #     descricao = ft.TextField(label="Descrição", multiline=True)
-    #     cor = ft.Dropdown(
-    #         label="Cor",
-    #         options=[
-    #             ft.dropdown.Option(ft.Colors.GREEN_100, "Verde"),
-    #             ft.dropdown.Option(ft.Colors.BLUE_100, "Azul"),
-    #             ft.dropdown.Option(ft.Colors.RED_100, "Vermelho"),
-    #         ]
-    #     )
-
-    #     def salvar_evento(e):
-    #         conn = sqlite3.connect(DB_PATH)
-    #         cursor = conn.cursor()
-    #         cursor.execute('''
-    #             INSERT INTO eventos (data, titulo, descricao, cor, id_usuario)
-    #             VALUES (?, ?, ?, ?, ?)
-    #         ''', (
-    #             date_picker.value.strftime("%Y-%m-%d"),
-    #             titulo.value,
-    #             descricao.value,
-    #             cor.value,
-    #             page.session.get("user_id")
-    #         ))
-    #         conn.commit()
-    #         conn.close()
-            
-    #         dialog.open = False
-    #         page.snack_bar = ft.SnackBar(ft.Text("Evento salvo com sucesso!"))
-    #         page.snack_bar.open = True
-    #         page.update()
-
-    #     dialog = ft.AlertDialog(
-    #         title=ft.Text(f"Novo Evento - {date_picker.value.strftime('%d/%m/%Y')}"),
-    #         content=ft.Column([titulo, descricao, cor]),
-    #         actions=[ft.ElevatedButton("Salvar", on_click=salvar_evento)]
-    #     )
-    #     page.dialog = dialog
-    #     dialog.open = True
-    #     page.update()
 
     def criar_conteudo(titulo, role, extra_controls=None):
         return ft.View(
             controls=[
+                criar_header(),
                 criar_nav_bar(role),
                 ft.Text(titulo, size=24, weight="bold"),
                 *(extra_controls or []),
@@ -298,4 +205,4 @@ def main(page: ft.Page):
     page.on_route_change = rotear
     page.go("/login")
 
-ft.app(target=main, view=ft.AppView.FLET_APP)
+ft.app(target=main, assets_dir=ASSETS_DIR, view=ft.AppView.FLET_APP)
