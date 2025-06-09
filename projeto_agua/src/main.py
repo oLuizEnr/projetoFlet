@@ -11,42 +11,28 @@ ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
 
 os.makedirs(ASSETS_DIR, exist_ok=True)
 
-def criar_tabela_usuarios():
+def criar_tabelas():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.executescript('''
         CREATE TABLE IF NOT EXISTS usuarios (
-            id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('admin', 'user'))
+                    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    senha_hash TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK(role IN ('admin', 'user'))
         )
-    ''')
-    conn.commit()
-    conn.close()
-
-def criar_tabela_eventos():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('''
+                         
         CREATE TABLE IF NOT EXISTS eventos (
             id_data INTEGER PRIMARY KEY AUTOINCREMENT,
-            data TEXT NOT NULL,
+            data DATE NOT NULL,
             titulo TEXT NOT NULL,
             descricao TEXT NOT NULL,
             cor TEXT,
             id_usuario INTEGER,
             FOREIGN KEY(id_usuario) REFERENCES usuarios(id_usuario)
         )
-    ''')
-    conn.commit()
-    conn.close()
-
-def criar_tabela_mensagens():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('''
+                         
         CREATE TABLE IF NOT EXISTS mensagens (
             id_mensagem INTEGER PRIMARY KEY AUTOINCREMENT,
             data DATE NOT NULL,
@@ -199,8 +185,7 @@ def main(page: ft.Page):
             page.update()
 
     # Inicialização
-    criar_tabela_usuarios()
-    criar_tabela_eventos()
+    criar_tabelas()
     criar_admin_padrao()
     page.on_route_change = rotear
     page.go("/login")
